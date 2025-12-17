@@ -47,4 +47,4 @@ To add a new skill:
 
 ## License
 
-MIT
+MIT license
