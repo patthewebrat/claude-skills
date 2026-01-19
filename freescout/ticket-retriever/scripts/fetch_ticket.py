@@ -126,6 +126,9 @@ def format_output(data):
         "email": customer.get("email", "")
     }
 
+    # CC recipients
+    ticket["cc"] = data.get("cc", [])
+
     # Assignee info
     assignee = data.get("assignee", {})
     if assignee:
@@ -182,6 +185,12 @@ def main():
     config = load_config()
     raw_data = fetch_ticket(config, ticket_id)
     formatted = format_output(raw_data)
+
+    # Add ticket URL for easy access
+    base_url = config['url'].rstrip('/')
+    if not base_url.startswith('http'):
+        base_url = f"https://{base_url}"
+    formatted["url"] = f"{base_url}/conversation/{formatted['id']}"
 
     print(json.dumps(formatted, indent=2))
 

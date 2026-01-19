@@ -5,6 +5,7 @@ Push a draft reply to a FreeScout ticket.
 Usage:
   python push_draft.py <ticket_id> <message>
   python push_draft.py <ticket_id> --stdin  (reads message from stdin)
+  python push_draft.py <ticket_id> --stdin --cc "email1@example.com,email2@example.com"
 
 Requires ~/.freescout/config.json with:
 {
@@ -40,7 +41,7 @@ def load_config():
     return config, None
 
 
-def push_draft(config, ticket_id, message):
+def push_draft(config, ticket_id, message, cc=None):
     """Push a draft reply to a FreeScout ticket."""
     ticket_id = str(ticket_id).lstrip('#')
 
@@ -56,6 +57,10 @@ def push_draft(config, ticket_id, message):
         "user": config['user_id'],
         "state": "draft"
     }
+
+    # Include CC recipients if provided
+    if cc:
+        payload["cc"] = cc
 
     data = json.dumps(payload).encode('utf-8')
 
@@ -92,22 +97,34 @@ def main():
     if len(sys.argv) < 2:
         print(json.dumps({
             "success": False,
-            "error": "Usage: push_draft.py <ticket_id> <message> OR push_draft.py <ticket_id> --stdin"
+            "error": "Usage: push_draft.py <ticket_id> <message> OR push_draft.py <ticket_id> --stdin [--cc emails]"
         }))
         sys.exit(1)
 
     ticket_id = sys.argv[1]
+    args = sys.argv[2:]
+
+    # Parse --cc argument
+    cc = None
+    if '--cc' in args:
+        cc_index = args.index('--cc')
+        if cc_index + 1 < len(args):
+            cc_value = args[cc_index + 1]
+            # Parse comma-separated emails into a list
+            cc = [email.strip() for email in cc_value.split(',') if email.strip()]
+            # Remove --cc and its value from args
+            args = args[:cc_index] + args[cc_index + 2:]
 
     # Get message from stdin or argument
-    if len(sys.argv) >= 3:
-        if sys.argv[2] == '--stdin':
+    if len(args) >= 1:
+        if args[0] == '--stdin':
             message = sys.stdin.read().strip()
         else:
-            message = ' '.join(sys.argv[2:])
+            message = ' '.join(args)
     else:
         print(json.dumps({
             "success": False,
-            "error": "No message provided. Use: push_draft.py <ticket_id> <message> OR push_draft.py <ticket_id> --stdin"
+            "error": "No message provided. Use: push_draft.py <ticket_id> <message> OR push_draft.py <ticket_id> --stdin [--cc emails]"
         }))
         sys.exit(1)
 
@@ -126,7 +143,7 @@ def main():
         }))
         sys.exit(1)
 
-    result = push_draft(config, ticket_id, message)
+    result = push_draft(config, ticket_id, message, cc=cc)
     print(json.dumps(result, indent=2))
 
     if not result.get("success"):

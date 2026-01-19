@@ -56,7 +56,9 @@ Display the ticket conversation like this:
 
 ```markdown
 ## Ticket #[number]: [subject]
+**URL:** [url]
 **Status:** [status] | **Assignee:** [assignee name or "Unassigned"] | **Customer:** [customer email]
+**CC:** [comma-separated CC emails, or "None" if empty]
 **Created:** [created_at] | **Last Updated:** [updated_at]
 
 ---
@@ -147,17 +149,19 @@ DO NOT:
 
 #### Pushing the Draft
 
-Run the push script with the HTML message:
+Run the push script with the HTML message. **Always include the CC recipients from the original ticket** using the `--cc` flag:
 
 ```bash
-echo "Your HTML message here" | python3 ~/.claude/skills/freescout-ticket-retriever/scripts/push_draft.py <ticket_id> --stdin
+echo "Your HTML message here" | python3 ~/.claude/skills/freescout-ticket-retriever/scripts/push_draft.py <ticket_id> --stdin --cc "email1@example.com,email2@example.com"
 ```
 
 Or directly:
 
 ```bash
-python3 ~/.claude/skills/freescout-ticket-retriever/scripts/push_draft.py <ticket_id> "Your HTML message here"
+python3 ~/.claude/skills/freescout-ticket-retriever/scripts/push_draft.py <ticket_id> --cc "email1@example.com,email2@example.com" "Your HTML message here"
 ```
+
+**Important:** Always pass the CC recipients from the fetched ticket data to preserve the conversation's CC list.
 
 ### Step 6: Confirm to User
 
